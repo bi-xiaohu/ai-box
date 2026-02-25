@@ -1,3 +1,4 @@
+mod commands;
 mod db;
 mod llm;
 
@@ -15,6 +16,20 @@ pub fn run() {
             app.manage(database);
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            // Chat
+            commands::chat::create_conversation,
+            commands::chat::list_conversations,
+            commands::chat::delete_conversation,
+            commands::chat::rename_conversation,
+            commands::chat::get_messages,
+            commands::chat::send_message,
+            // Settings
+            commands::settings::get_settings,
+            commands::settings::set_setting,
+            commands::settings::delete_setting,
+            commands::settings::get_available_models,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
