@@ -12,9 +12,11 @@
   "app": {
     "windows": [
       {
-        "title": "ai-box",
-        "width": 800,
-        "height": 600
+        "title": "AI-Box",
+        "width": 1200,
+        "height": 800,
+        "minWidth": 800,
+        "minHeight": 600
       }
     ],
     "security": {
