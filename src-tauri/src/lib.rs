@@ -1,5 +1,7 @@
 mod commands;
 mod db;
+mod doc_processor;
+mod embedding;
 mod llm;
 
 use db::Database;
@@ -9,6 +11,7 @@ use tauri::Manager;
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
         .setup(|app| {
             let app_dir = app.path().app_data_dir()?;
             let database =
@@ -29,6 +32,11 @@ pub fn run() {
             commands::settings::set_setting,
             commands::settings::delete_setting,
             commands::settings::get_available_models,
+            // Knowledge base
+            commands::knowledge::list_documents,
+            commands::knowledge::upload_document,
+            commands::knowledge::delete_document,
+            commands::knowledge::search_knowledge_base,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
