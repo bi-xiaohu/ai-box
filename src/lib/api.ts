@@ -83,3 +83,40 @@ export async function deleteSetting(key: string): Promise<void> {
 export async function getAvailableModels(): Promise<ModelInfo[]> {
   return invoke("get_available_models");
 }
+
+// ── Knowledge Base API ──
+
+export interface DocumentInfo {
+  id: string;
+  filename: string;
+  file_type: string;
+  file_path: string;
+  file_size: number | null;
+  created_at: string;
+}
+
+export interface ChunkInfo {
+  id: string;
+  content: string;
+  chunk_index: number;
+  score: number | null;
+}
+
+export async function listDocuments(): Promise<DocumentInfo[]> {
+  return invoke("list_documents");
+}
+
+export async function uploadDocument(filePath: string): Promise<DocumentInfo> {
+  return invoke("upload_document", { filePath });
+}
+
+export async function deleteDocument(id: string): Promise<void> {
+  return invoke("delete_document", { id });
+}
+
+export async function searchKnowledgeBase(
+  query: string,
+  topK?: number
+): Promise<ChunkInfo[]> {
+  return invoke("search_knowledge_base", { query, topK });
+}

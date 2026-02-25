@@ -3,6 +3,7 @@ import "./App.css";
 import Sidebar from "./components/Sidebar";
 import ChatView from "./components/ChatView";
 import SettingsModal from "./components/SettingsModal";
+import KnowledgeBase from "./components/KnowledgeBase";
 import {
   Conversation,
   ModelInfo,
@@ -16,6 +17,7 @@ function App() {
   const [models, setModels] = useState<ModelInfo[]>([]);
   const [currentModel, setCurrentModel] = useState("ollama/llama3");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [kbOpen, setKbOpen] = useState(false);
 
   // Load conversations and models on mount
   useEffect(() => {
@@ -55,6 +57,7 @@ function App() {
         onNew={handleNewConversation}
         onDelete={handleDeleteConversation}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenKnowledgeBase={() => setKbOpen(true)}
         model={currentModel}
       />
       <ChatView
@@ -68,6 +71,7 @@ function App() {
         onClose={() => setSettingsOpen(false)}
         onSaved={loadModels}
       />
+      <KnowledgeBase open={kbOpen} onClose={() => setKbOpen(false)} />
     </main>
   );
 }

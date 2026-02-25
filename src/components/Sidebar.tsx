@@ -12,6 +12,7 @@ interface SidebarProps {
   onNew: (conv: Conversation) => void;
   onDelete: (id: string) => void;
   onOpenSettings: () => void;
+  onOpenKnowledgeBase: () => void;
   model: string;
 }
 
@@ -22,6 +23,7 @@ export default function Sidebar({
   onNew,
   onDelete,
   onOpenSettings,
+  onOpenKnowledgeBase,
   model,
 }: SidebarProps) {
   const [loading, setLoading] = useState(false);
@@ -90,7 +92,13 @@ export default function Sidebar({
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-gray-800">
+      <div className="p-3 border-t border-gray-800 space-y-1">
+        <button
+          onClick={onOpenKnowledgeBase}
+          className="w-full py-2 px-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm transition-colors cursor-pointer"
+        >
+          📚 Knowledge Base
+        </button>
         <button
           onClick={onOpenSettings}
           className="w-full py-2 px-3 text-gray-400 hover:text-white hover:bg-gray-800 rounded-lg text-sm transition-colors cursor-pointer"
