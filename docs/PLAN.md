@@ -39,79 +39,80 @@ AI-Box 是一个基于 Tauri 的本地桌面应用，集成多种 AI 功能于�
 └──────────────────────────────────────────────┘
 ```
 
-## MVP 功能范围 (Phase 1)
+## MVP 已实现功能 (Phase 1) ✅
 
 ### 1. 多模型 AI 对话
-- 支持接入 OpenAI (GPT-4o)、Anthropic (Claude)、本地 Ollama 模型
-- 统一的对话界面，可切换模型
-- 对话历史持久化 (SQLite)
-- 支持 Markdown 渲染、代码高亮
-- 流式输出 (SSE/streaming)
+- ✅ 支持接入 OpenAI (GPT-4o)、Anthropic (Claude)、本地 Ollama 模型
+- ✅ 统一的对话界面，可切换模型
+- ✅ 对话历史持久化 (SQLite)
+- ✅ 支持 Markdown 渲染（react-markdown + GFM）
+- ✅ 流式输出 (SSE streaming)
 
 ### 2. RAG 个人知识库
-- 文档上传与管理 (支持 txt, md, pdf)
-- 文档自动分块 (chunking)
-- 文本 Embedding 生成 (调用 OpenAI Embedding API 或本地模型)
-- 向量存储与相似度检索
-- 对话时可选择关联知识库，自动检索相关内容注入 prompt
+- ✅ 文档上传与管理 (支持 txt, md, pdf)
+- ✅ 文档自动分块 (512 字符 + 64 字符重叠)
+- ✅ 文本 Embedding 生成 (OpenAI text-embedding-3-small)
+- ✅ 向量存储 (SQLite BLOB) 与余弦相似度检索
+- ✅ 知识库管理 UI（上传/删除/浏览文档）
 
 ### 3. 基础设施
-- API Key 管理 (加密存储)
-- 全局设置 (主题、默认模型、Ollama 地址等)
-- 应用配置持久化
+- ✅ API Key 管理（存储 + 掩码显示）
+- ✅ 全局设置（Base URL、Ollama Host、默认模型）
+- ✅ 应用配置持久化 (SQLite settings 表)
+- ✅ Copilot Instructions 配置
 
-## 后续阶段 (Phase 2+)
+## 未来计划 (Phase 2+)
 
-- 图片生成 (Stable Diffusion / DALL-E)
-- 语音识别 / TTS (Whisper / edge-tts)
-- OCR 文档识别
-- 代码助手
-- 插件系统
+### P0 — 核心完善
 
-## MVP 实施计划
+| 功能 | 说明 | 涉及模块 |
+|------|------|---------|
+| RAG 对话注入 | 聊天时自动检索知识库相关 chunks，注入 system prompt，实现"基于文档的问答" | `commands/chat.rs`, `ChatView.tsx` |
+| API Key 加密存储 | 当前明文存 SQLite，改用 `tauri-plugin-stronghold` 或系统 Keyring | `commands/settings.rs` |
 
-### Todo 列表
+### P1 — 体验优化
 
-1. ✅ **project-init** — 初始化 Tauri v2 + React + TypeScript 项目脚手架
-2. **db-layer** — 实现 SQLite 数据库层 (schema 设计、连接管理、migration)
-3. **llm-gateway** — 实现 LLM 网关 (统一接口适配 OpenAI/Claude/Ollama，支持 streaming)
-4. **chat-backend** — 实现对话后端逻辑 (对话管理、历史存储、Tauri commands)
-5. **chat-ui** — 实现对话前端界面 (对话列表、消息展示、模型切换、Markdown 渲染)
-6. **settings** — 实现设置模块 (API Key 管理、全局配置)
-7. **doc-processor** — 实现文档处理器 (上传、解析 txt/md/pdf、文本分块)
-8. **embedding-engine** — 实现 Embedding 引擎 (调用 Embedding API、向量存储与检索)
-9. **rag-integration** — RAG 集成 (知识库管理 UI、对话中知识库检索注入)
-10. **polish** — 整体打磨 (错误处理、加载状态、UI 美化、打包测试)
+| 功能 | 说明 | 涉及模块 |
+|------|------|---------|
+| Ollama 模型自动发现 | 调用 `GET /api/tags` 动态获取已安装的本地模型列表 | `commands/settings.rs` |
+| 对话标题自动生成 | 首次消息后调用 LLM 自动生成对话标题 | `commands/chat.rs` |
+| 代码语法高亮 | 集成 highlight.js 或 shiki，Markdown 代码块高亮 | `ChatView.tsx` |
+| 错误提示优化 | 统一 Toast 通知，替代当前 console.error 静默处理 | 前端全局 |
+| 深色/浅色主题切换 | 读取 settings 中 theme 配置，支持手动切换 | 前端全局 |
 
-### 依赖关系
+### P2 — 功能扩展
 
-```
-project-init ✅
-  ├── db-layer
-  │     ├── chat-backend
-  │     └── doc-processor
-  ├── llm-gateway
-  │     └── chat-backend
-  │           └── chat-ui
-  ├── settings (依赖 db-layer)
-  ├── embedding-engine (依赖 db-layer, llm-gateway)
-  │     └── rag-integration (依赖 doc-processor, embedding-engine, chat-ui)
-  └── polish (依赖所有)
-```
+| 功能 | 说明 | 涉及模块 |
+|------|------|---------|
+| 图片生成 | 接入 DALL-E / Stable Diffusion API，独立画图面板 | 新增 `llm/image.rs` + 前端组件 |
+| 语音交互 | Whisper 语音转文字 + edge-tts 文字转语音 | 新增 `audio/` 模块 |
+| OCR 文档识别 | 扩展 doc_processor 支持图片/扫描 PDF | `doc_processor.rs` |
+| 对话导出 | 导出为 Markdown / PDF 文件 | 新增导出命令 + UI |
+| 多模型对比 | 同一问题发给多个模型，并排对比回答 | `ChatView.tsx` 扩展 |
+
+### P3 — 架构演进
+
+| 功能 | 说明 | 涉及模块 |
+|------|------|---------|
+| 插件系统 | 定义插件 API，支持第三方扩展新的 AI 功能 | 新增 `plugins/` 模块 |
+| 多窗口/标签页 | 同时打开多个对话窗口 | Tauri 多窗口 + 前端路由 |
+| 向量数据库升级 | 文档量大时从暴力搜索迁移到 HNSW 索引 | `embedding.rs` |
+| 国际化 (i18n) | 支持中英文界面切换 | 前端全局 |
 
 ## 关键 Rust Crates
 
 - `tauri` — 桌面应用框架
-- `rusqlite` — SQLite 绑定
-- `reqwest` — HTTP 客户端 (调用 AI API)
+- `rusqlite` — SQLite 绑定 (bundled)
+- `reqwest` — HTTP 客户端 (json + stream)
 - `serde` / `serde_json` — 序列化
-- `tokio` — 异步运行时
-- `pdf-extract` 或 `lopdf` — PDF 解析
-- `text-splitter` — 文本分块
-- `usearch` 或自定义 HNSW — 向量搜索
+- `thiserror` — 错误处理
+- `uuid` — ID 生成
+- `pdf-extract` — PDF 解析
+- `futures` — 异步流处理
 
 ## 备注
 
 - 优先保证核心体验流畅，功能可以逐步迭代
-- API Key 需加密存储，不能明文保存
-- 考虑离线场景：接入 Ollama 本地模型可完全离线使用
+- API Key 加密存储是 P0 优先级安全问题
+- Ollama 本地模型可实现完全离线使用
+
