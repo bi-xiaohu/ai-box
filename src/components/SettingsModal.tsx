@@ -45,6 +45,12 @@ const FIELDS: SettingField[] = [
     placeholder: "http://localhost:11434",
     secret: false,
   },
+  {
+    key: "copilot_api_key",
+    label: "GitHub Copilot Token (PAT with models:read)",
+    placeholder: "ghp_...",
+    secret: true,
+  },
 ];
 
 export default function SettingsModal({

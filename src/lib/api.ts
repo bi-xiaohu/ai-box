@@ -84,6 +84,10 @@ export async function getAvailableModels(): Promise<ModelInfo[]> {
   return invoke("get_available_models");
 }
 
+export async function fetchCopilotModels(): Promise<ModelInfo[]> {
+  return invoke("fetch_copilot_models");
+}
+
 // ── Knowledge Base API ──
 
 export interface DocumentInfo {

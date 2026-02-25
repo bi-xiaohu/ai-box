@@ -32,6 +32,7 @@ pub fn run() {
             commands::settings::set_setting,
             commands::settings::delete_setting,
             commands::settings::get_available_models,
+            commands::settings::fetch_copilot_models,
             // Knowledge base
             commands::knowledge::list_documents,
             commands::knowledge::upload_document,

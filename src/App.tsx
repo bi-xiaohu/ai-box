@@ -8,6 +8,7 @@ import {
   Conversation,
   ModelInfo,
   getAvailableModels,
+  fetchCopilotModels,
   listConversations,
 } from "./lib/api";
 
@@ -25,15 +26,23 @@ function App() {
     loadModels();
   }, []);
 
-  function loadModels() {
-    getAvailableModels()
-      .then((m) => {
-        setModels(m);
-        if (m.length > 0 && !m.find((x) => x.id === currentModel)) {
-          setCurrentModel(m[0].id);
-        }
-      })
-      .catch(console.error);
+  async function loadModels() {
+    try {
+      let m = await getAvailableModels();
+      // Dynamically fetch Copilot models from catalog API
+      try {
+        const copilotModels = await fetchCopilotModels();
+        m = [...m, ...copilotModels];
+      } catch {
+        // Copilot key not configured or fetch failed — ignore
+      }
+      setModels(m);
+      if (m.length > 0 && !m.find((x) => x.id === currentModel)) {
+        setCurrentModel(m[0].id);
+      }
+    } catch (e) {
+      console.error("Failed to load models:", e);
+    }
   }
 
   function handleNewConversation(conv: Conversation) {

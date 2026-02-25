@@ -1,4 +1,5 @@
 pub mod claude;
+pub mod copilot;
 pub mod openai;
 
 use serde::{Deserialize, Serialize};
@@ -41,6 +42,7 @@ pub enum Provider {
     OpenAi(openai::OpenAiConfig),
     Claude(claude::ClaudeConfig),
     Ollama(openai::OpenAiConfig),
+    Copilot(copilot::CopilotConfig),
 }
 
 impl Provider {
@@ -65,12 +67,17 @@ impl Provider {
         })
     }
 
+    pub fn copilot(github_token: String) -> Self {
+        Provider::Copilot(copilot::CopilotConfig { github_token })
+    }
+
     pub async fn chat(&self, request: &ChatRequest) -> Result<ChatResponse, LlmError> {
         match self {
             Provider::OpenAi(config) | Provider::Ollama(config) => {
                 openai::chat(config, request).await
             }
             Provider::Claude(config) => claude::chat(config, request).await,
+            Provider::Copilot(config) => copilot::chat(config, request).await,
         }
     }
 
@@ -84,6 +91,7 @@ impl Provider {
                 openai::chat_stream(config, request, on_chunk).await
             }
             Provider::Claude(config) => claude::chat_stream(config, request, on_chunk).await,
+            Provider::Copilot(config) => copilot::chat_stream(config, request, on_chunk).await,
         }
     }
 }

@@ -11,6 +11,7 @@ pub struct AppSettings {
     pub claude_api_key: Option<String>,
     pub claude_base_url: Option<String>,
     pub ollama_host: Option<String>,
+    pub copilot_api_key: Option<String>,
     pub default_model: Option<String>,
     pub theme: Option<String>,
 }
@@ -21,6 +22,7 @@ const SETTING_KEYS: &[&str] = &[
     "claude_api_key",
     "claude_base_url",
     "ollama_host",
+    "copilot_api_key",
     "default_model",
     "theme",
 ];
@@ -124,4 +126,20 @@ pub fn get_available_models(db: State<'_, Database>) -> Result<Vec<ModelInfo>, S
     ]);
 
     Ok(models)
+}
+
+/// Fetch available models from the Copilot API.
+#[tauri::command]
+pub async fn fetch_copilot_models(
+    db: State<'_, Database>,
+) -> Result<Vec<ModelInfo>, String> {
+    let github_token = db
+        .get_setting("copilot_api_key")
+        .ok()
+        .flatten()
+        .ok_or("GitHub Copilot token not configured")?;
+
+    crate::llm::copilot::fetch_models(&github_token)
+        .await
+        .map_err(|e| e.to_string())
 }
