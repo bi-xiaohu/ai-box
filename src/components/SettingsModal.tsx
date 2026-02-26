@@ -47,7 +47,7 @@ const FIELDS: SettingField[] = [
   },
   {
     key: "copilot_api_key",
-    label: "GitHub Copilot Token (PAT with models:read)",
+    label: "GitHub Token (PAT with copilot scope)",
     placeholder: "ghp_...",
     secret: true,
   },
