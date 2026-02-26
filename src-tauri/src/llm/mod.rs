@@ -67,8 +67,8 @@ impl Provider {
         })
     }
 
-    pub fn copilot(github_token: String) -> Self {
-        Provider::Copilot(copilot::CopilotConfig { github_token })
+    pub fn copilot(oauth_token: String) -> Self {
+        Provider::Copilot(copilot::CopilotConfig { oauth_token })
     }
 
     pub async fn chat(&self, request: &ChatRequest) -> Result<ChatResponse, LlmError> {

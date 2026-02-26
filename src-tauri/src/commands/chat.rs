@@ -36,12 +36,12 @@ fn resolve_provider(model: &str, db: &Database) -> Result<(Provider, String), St
             model_id.to_string(),
         ))
     } else if let Some(model_id) = model.strip_prefix("copilot/") {
-        let api_key = db
-            .get_setting("copilot_api_key")
+        let oauth_token = db
+            .get_setting("copilot_oauth_token")
             .ok()
             .flatten()
-            .ok_or("GitHub Copilot API key not configured")?;
-        Ok((Provider::copilot(api_key), model_id.to_string()))
+            .ok_or("GitHub Copilot not logged in")?;
+        Ok((Provider::copilot(oauth_token), model_id.to_string()))
     } else {
         let model_id = model.strip_prefix("openai/").unwrap_or(model);
         let api_key = db

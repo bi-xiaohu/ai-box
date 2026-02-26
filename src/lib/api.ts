@@ -88,6 +88,31 @@ export async function fetchCopilotModels(): Promise<ModelInfo[]> {
   return invoke("fetch_copilot_models");
 }
 
+export interface DeviceCodeResponse {
+  device_code: string;
+  user_code: string;
+  verification_uri: string;
+  interval: number;
+}
+
+export async function copilotStartLogin(): Promise<DeviceCodeResponse> {
+  return invoke("copilot_start_login");
+}
+
+export async function copilotPollLogin(
+  deviceCode: string
+): Promise<string | null> {
+  return invoke("copilot_poll_login", { deviceCode });
+}
+
+export async function copilotIsLoggedIn(): Promise<boolean> {
+  return invoke("copilot_is_logged_in");
+}
+
+export async function copilotLogout(): Promise<void> {
+  return invoke("copilot_logout");
+}
+
 // ── Knowledge Base API ──
 
 export interface DocumentInfo {

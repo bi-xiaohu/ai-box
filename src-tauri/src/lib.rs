@@ -33,6 +33,10 @@ pub fn run() {
             commands::settings::delete_setting,
             commands::settings::get_available_models,
             commands::settings::fetch_copilot_models,
+            commands::settings::copilot_start_login,
+            commands::settings::copilot_poll_login,
+            commands::settings::copilot_is_logged_in,
+            commands::settings::copilot_logout,
             // Knowledge base
             commands::knowledge::list_documents,
             commands::knowledge::upload_document,

@@ -1,5 +1,14 @@
-import { useEffect, useState } from "react";
-import { getSettings, setSetting, deleteSetting } from "../lib/api";
+import { useEffect, useState, useRef, useCallback } from "react";
+import {
+  getSettings,
+  setSetting,
+  deleteSetting,
+  copilotStartLogin,
+  copilotPollLogin,
+  copilotIsLoggedIn,
+  copilotLogout,
+} from "../lib/api";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 interface SettingsModalProps {
   open: boolean;
@@ -45,16 +54,10 @@ const FIELDS: SettingField[] = [
     placeholder: "http://localhost:11434",
     secret: false,
   },
-  {
-    key: "copilot_api_key",
-    label: "GitHub Token (PAT with copilot scope)",
-    placeholder: "ghp_...",
-    secret: true,
-  },
 ];
 
 export default function SettingsModal({
-  open,
+  open: isOpen,
   onClose,
   onSaved,
 }: SettingsModalProps) {
@@ -63,8 +66,22 @@ export default function SettingsModal({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
+  // Copilot login state
+  const [copilotLoggedIn, setCopilotLoggedIn] = useState(false);
+  const [copilotLoggingIn, setCopilotLoggingIn] = useState(false);
+  const [, setDeviceCode] = useState("");
+  const [userCode, setUserCode] = useState("");
+  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stopPolling = useCallback(() => {
+    if (pollRef.current) {
+      clearTimeout(pollRef.current);
+      pollRef.current = null;
+    }
+  }, []);
+
   useEffect(() => {
-    if (open) {
+    if (isOpen) {
       getSettings()
         .then((s) => {
           setValues(s);
@@ -72,8 +89,54 @@ export default function SettingsModal({
           setMessage("");
         })
         .catch(console.error);
+      copilotIsLoggedIn().then(setCopilotLoggedIn).catch(console.error);
     }
-  }, [open]);
+    return stopPolling;
+  }, [isOpen, stopPolling]);
+
+  async function handleCopilotLogin() {
+    setCopilotLoggingIn(true);
+    setMessage("");
+    try {
+      const resp = await copilotStartLogin();
+      setDeviceCode(resp.device_code);
+      setUserCode(resp.user_code);
+      // Open browser for user to authorize
+      await openUrl(resp.verification_uri);
+      // Start polling with recursive setTimeout to avoid overlapping requests
+      const interval = Math.max(resp.interval, 3) * 1000;
+      const poll = async () => {
+        try {
+          const token = await copilotPollLogin(resp.device_code);
+          if (token) {
+            setCopilotLoggedIn(true);
+            setCopilotLoggingIn(false);
+            setDeviceCode("");
+            setUserCode("");
+            setMessage("GitHub Copilot connected!");
+            onSaved();
+            return;
+          }
+        } catch (err) {
+          setCopilotLoggingIn(false);
+          setMessage("Error: Login failed or expired. Try again.");
+          return;
+        }
+        pollRef.current = setTimeout(poll, interval);
+      };
+      pollRef.current = setTimeout(poll, interval);
+    } catch (e) {
+      setCopilotLoggingIn(false);
+      setMessage(`Error: ${e}`);
+    }
+  }
+
+  async function handleCopilotLogout() {
+    await copilotLogout();
+    setCopilotLoggedIn(false);
+    setMessage("GitHub Copilot disconnected.");
+    onSaved();
+  }
 
   async function handleSave() {
     setSaving(true);
@@ -99,7 +162,7 @@ export default function SettingsModal({
     }
   }
 
-  if (!open) return null;
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
@@ -140,6 +203,42 @@ export default function SettingsModal({
               />
             </div>
           ))}
+
+          {/* GitHub Copilot Login */}
+          <div className="pt-2 border-t border-gray-800">
+            <label className="block text-sm text-gray-400 mb-2">
+              GitHub Copilot
+            </label>
+            {copilotLoggedIn ? (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-green-400">✓ Connected</span>
+                <button
+                  onClick={handleCopilotLogout}
+                  className="px-3 py-1.5 text-sm text-red-400 hover:text-red-300 border border-red-800 hover:border-red-600 rounded-lg transition-colors cursor-pointer"
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : copilotLoggingIn ? (
+              <div className="space-y-2">
+                <p className="text-sm text-gray-300">
+                  Enter code{" "}
+                  <code className="bg-gray-800 px-2 py-0.5 rounded font-mono text-yellow-300 text-base">
+                    {userCode}
+                  </code>{" "}
+                  in the browser window
+                </p>
+                <p className="text-xs text-gray-500">Waiting for authorization...</p>
+              </div>
+            ) : (
+              <button
+                onClick={handleCopilotLogin}
+                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-600 rounded-lg text-sm transition-colors cursor-pointer"
+              >
+                Login with GitHub
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Footer */}
